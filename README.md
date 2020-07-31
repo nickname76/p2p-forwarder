@@ -1,4 +1,4 @@
-# p2p-forwarder
+# P2P Forwarder
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nickname32/discordhook)](https://goreportcard.com/report/github.com/nickname32/p2p-forwarder)
 
