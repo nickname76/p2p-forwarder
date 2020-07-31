@@ -62,61 +62,9 @@ func newOpenPortsStore() *openPortsStore {
 
 // NewForwarder - instances Forwarder and connects it to libp2p network
 func NewForwarder() (*Forwarder, context.CancelFunc, error) {
-	krPath, err := appdir.AppInfo{
-		Author: "nickname32",
-		Name:   "P2P Forwarder",
-	}.ConfigPath("keypair")
+	priv, err := loadUserPrivKey()
 	if err != nil {
 		return nil, nil, err
-	}
-
-	var priv crypto.PrivKey
-
-	pkFile, err := os.Open(krPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			priv, _, err = crypto.GenerateKeyPair(crypto.Ed25519, -1)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			b, err := crypto.MarshalPrivateKey(priv)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			err = os.MkdirAll(filepath.Dir(krPath), os.ModePerm)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			newPkFile, err := os.Create(krPath)
-			if err != nil {
-				return nil, nil, err
-			}
-			_, err = newPkFile.Write(b)
-			if err != nil {
-				return nil, nil, err
-			}
-			err = newPkFile.Close()
-			if err != nil {
-				return nil, nil, err
-			}
-		} else {
-			return nil, nil, err
-		}
-	} else {
-		defer pkFile.Close()
-
-		b, err := ioutil.ReadAll(pkFile)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		priv, err = crypto.UnmarshalPrivateKey(b)
-		if err != nil {
-			return nil, nil, err
-		}
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -166,6 +114,66 @@ func NewForwarder() (*Forwarder, context.CancelFunc, error) {
 	setPortsPubSubHandler(f)
 
 	return f, cancel, nil
+}
+
+func loadUserPrivKey() (priv crypto.PrivKey, err error) {
+	krPath, err := appdir.AppInfo{
+		Author: "nickname32",
+		Name:   "P2P Forwarder",
+	}.ConfigPath("keypair")
+	if err != nil {
+		return nil, err
+	}
+
+	pkFile, err := os.Open(krPath)
+
+	if err == nil {
+		defer pkFile.Close()
+
+		b, err := ioutil.ReadAll(pkFile)
+		if err != nil {
+			return nil, err
+		}
+
+		priv, err = crypto.UnmarshalPrivateKey(b)
+		if err != nil {
+			return nil, err
+		}
+
+		return priv, nil
+	}
+
+	if !os.IsNotExist(err) {
+		return nil, err
+	}
+
+	priv, _, err = crypto.GenerateKeyPair(crypto.Ed25519, -1)
+	if err != nil {
+		return nil, err
+	}
+	b, err := crypto.MarshalPrivateKey(priv)
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.MkdirAll(filepath.Dir(krPath), os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+	newPkFile, err := os.Create(krPath)
+	if err != nil {
+		return nil, err
+	}
+	_, err = newPkFile.Write(b)
+	if err != nil {
+		return nil, err
+	}
+	err = newPkFile.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	return priv, nil
 }
 
 func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, error) {
