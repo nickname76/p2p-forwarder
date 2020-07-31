@@ -5,10 +5,14 @@ rm -r ./builds
 build() {
     if [ "$1" = "windows" ]; then
         ./build.sh "$1" "$2" "./builds/P2P Forwarder.exe"
-        zip "./builds/P2P_Forwarder_$1_$2.zip" "./builds/P2P Forwarder.exe"
+        cd ./builds
+        zip "./P2P_Forwarder_$1_$2.zip" "./P2P Forwarder.exe"
+        cd ..
     else
         ./build.sh "$1" "$2" "./builds/P2P Forwarder"
-        zip "./builds/P2P_Forwarder_$1_$2.zip" "./builds/P2P Forwarder"
+        cd ./builds
+        zip "./P2P_Forwarder_$1_$2.zip" "./P2P Forwarder"
+        cd ..
     fi
 }
 

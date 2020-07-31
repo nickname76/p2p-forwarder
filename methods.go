@@ -14,8 +14,8 @@ var (
 	ErrMaxConnections = errors.New("Max connections reached")
 	// ErrPortAlreadyOpened = error "Port already opened"
 	ErrPortAlreadyOpened = errors.New("Port already opened")
-	// ErrUnknownNetworkType = error "Unkown network type. It must be \"tcp\" or \"udp\""
-	ErrUnknownNetworkType = errors.New("Unkown network type. It must be \"tcp\" or \"udp\"")
+	// ErrUnknownNetworkType = error "Unknown network type. It must be \"tcp\" or \"udp\""
+	ErrUnknownNetworkType = errors.New("Unknown network type. It must be \"tcp\" or \"udp\"")
 )
 
 // OpenPort opens port in specified networkType - "tcp" or "udp"
