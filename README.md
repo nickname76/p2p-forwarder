@@ -4,7 +4,7 @@
 
 Tool for farwarding ports. Made using [libp2p](https://github.com/libp2p/go-libp2p).
 
-![screenshot](https://i.imgur.com/BMFXKNK.png)
+![screenshot](https://repository-images.githubusercontent.com/284020308/1534a100-d34b-11ea-9d0f-b22749e919b9)
 
 ## How it works
 
