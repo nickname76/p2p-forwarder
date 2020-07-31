@@ -23,6 +23,6 @@ Current ui is using [clui](https://github.com/VladimirMarkelov/clui), but i'm wo
 
 Also i'm thinking about making cli.
 
-### Feel free to contribute this project by opening an issue (it can be also a question) or creating pull requests
+### Feel free to contribute to this project by opening an issue (it can be also a question) or creating pull requests
 
 #### Star this project if you liked it or found it useful for you :3
