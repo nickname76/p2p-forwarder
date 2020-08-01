@@ -21,7 +21,7 @@ Project is on early beta stage. I recommend you to use it only for personal purp
 
 Current ui is using [clui](https://github.com/VladimirMarkelov/clui), but i'm working on more comfortable one, which will be using [gotk3](https://github.com/gotk3/gotk3) (bindings to gtk3)
 
-Also i'm thinking about making cli.
+Also i'm thinking about making a cli.
 
 ### Feel free to contribute to this project by opening an issue (it can be also a question) or creating a pull requests
 
