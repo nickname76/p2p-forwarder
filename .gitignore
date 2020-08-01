@@ -1,10 +1,14 @@
 # Binaries for programs and plugins
-/cmd/tui/builds
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+
+# Project builds
+/cmd/tui-builds
+/cmd/gui-builds
+/cmd/cli-builds
 
 # Test binary, built with `go test -c`
 *.test

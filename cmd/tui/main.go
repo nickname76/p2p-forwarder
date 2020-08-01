@@ -61,7 +61,7 @@ func createLog(parent clui.Control) (onErrFn func(error), onInfoFn func(string))
 	textView.SetMaxItems(500)
 	textView.SetAutoScroll(true)
 
-	logCh := make(chan string, 5)
+	logCh := make(chan string, 2)
 	go func() {
 		for {
 			msg := <-logCh
@@ -116,7 +116,7 @@ func createConnections(parent clui.Control, fwr *p2pforwarder.Forwarder) {
 	buttonA.OnClick(func(_ clui.Event) {
 		connInfo := strings.TrimSpace(editField.Title())
 
-		listenip, cancel, err := fwr.Forward(connInfo)
+		listenip, cancel, err := fwr.Connect(connInfo)
 		if err != nil {
 			label.SetTitle("Error: " + err.Error())
 			return

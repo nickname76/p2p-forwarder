@@ -67,8 +67,8 @@ var (
 	listenipNMux sync.Mutex
 )
 
-// Forward starts forwarding connections to `listenip`:`PORT` to passed id`:`PORT`
-func (f *Forwarder) Forward(id string) (listenip string, cancel context.CancelFunc, err error) {
+// Connect starts forwarding connections to `listenip`:`PORT` to passed id`:`PORT`
+func (f *Forwarder) Connect(id string) (listenip string, cancel context.CancelFunc, err error) {
 	peerid, err := peer.IDB58Decode(id)
 	if err != nil {
 		return "", nil, err

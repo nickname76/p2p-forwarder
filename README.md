@@ -2,7 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nickname32/discordhook)](https://goreportcard.com/report/github.com/nickname32/p2p-forwarder)
 
-Tool for farwarding ports. Made using [libp2p](https://github.com/libp2p/go-libp2p).
+A tool for farwarding ports. Made using [libp2p](https://github.com/libp2p/go-libp2p).
 
 ![screenshot](https://i.imgur.com/BMFXKNK.png)
 
@@ -19,9 +19,7 @@ P.S. every edit field handles Ctrl+C and Ctrl+V. To exit the program, press Ctrl
 
 Project is on early beta stage. I recommend you to use it only for personal purposes like playing Minecraft with friends.
 
-Current ui is using [clui](https://github.com/VladimirMarkelov/clui), but i'm working on more comfortable one, which will be using [gotk3](https://github.com/gotk3/gotk3) (bindings to gtk3)
-
-Also i'm thinking about making cli.
+Current uis are cli and tui ([clui](https://github.com/VladimirMarkelov/clui)).
 
 ### Feel free to contribute to this project by opening an issue (it can be also a question) or creating pull requests
 

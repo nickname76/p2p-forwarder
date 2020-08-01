@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math/rand"
 	"net"
 	"strconv"
 
@@ -78,16 +79,35 @@ func setDialHandler(f *Forwarder) {
 func (f *Forwarder) dial(ctx context.Context, peerid peer.ID, protocolType byte, listenip string, port uint16) {
 	switch protocolType {
 	case protocolTypeTCP:
+		lport := int(port)
 		ln, err := net.ListenTCP("tcp", &net.TCPAddr{
 			IP:   net.ParseIP(listenip),
-			Port: int(port),
+			Port: lport,
 		})
 		if err != nil {
 			onErrFn(fmt.Errorf("dial tcp: %s", err))
-			return
+
+			for i := 0; i < 4; i++ {
+				lport = rand.Intn(65535-1024) + 1024
+
+				ln, err = net.ListenTCP("tcp", &net.TCPAddr{
+					IP:   net.ParseIP(listenip),
+					Port: lport,
+				})
+
+				if err != nil {
+					onErrFn(fmt.Errorf("dial tcp: %s", err))
+				} else {
+					break
+				}
+			}
+
+			if err != nil {
+				return
+			}
 		}
 
-		addressstr := "tcp:" + listenip + ":" + strconv.FormatUint(uint64(port), 10)
+		addressstr := "tcp:" + listenip + ":" + strconv.Itoa(lport) + " -> " + strconv.FormatUint(uint64(port), 10)
 
 		onInfoFn("Listening " + addressstr)
 
@@ -115,16 +135,37 @@ func (f *Forwarder) dial(ctx context.Context, peerid peer.ID, protocolType byte,
 		onInfoFn("Closed " + addressstr)
 
 	case protocolTypeUDP:
+		lport := int(port)
+
 		conn, err := net.ListenUDP("udp", &net.UDPAddr{
 			IP:   net.ParseIP(listenip),
-			Port: int(port),
+			Port: lport,
 		})
+
 		if err != nil {
 			onErrFn(fmt.Errorf("dial udp ln: %s", err))
-			return
+
+			for i := 0; i < 4; i++ {
+				lport = rand.Intn(65535-1024) + 1024
+
+				conn, err = net.ListenUDP("udp", &net.UDPAddr{
+					IP:   net.ParseIP(listenip),
+					Port: lport,
+				})
+
+				if err != nil {
+					onErrFn(fmt.Errorf("dial udp: %s", err))
+				} else {
+					break
+				}
+			}
+
+			if err != nil {
+				return
+			}
 		}
 
-		addressstr := "udp:" + listenip + ":" + strconv.FormatUint(uint64(port), 10)
+		addressstr := "udp:" + listenip + ":" + strconv.Itoa(lport) + " -> " + strconv.FormatUint(uint64(port), 10)
 
 		onInfoFn("Listening " + addressstr)
 
