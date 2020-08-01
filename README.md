@@ -2,7 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nickname32/discordhook)](https://goreportcard.com/report/github.com/nickname32/p2p-forwarder)
 
-Tool for farwarding ports. Made using [libp2p](https://github.com/libp2p/go-libp2p).
+A tool for farwarding ports. Made using [libp2p](https://github.com/libp2p/go-libp2p).
 
 ![screenshot](https://repository-images.githubusercontent.com/284020308/1534a100-d34b-11ea-9d0f-b22749e919b9)
 
@@ -23,6 +23,6 @@ Current ui is using [clui](https://github.com/VladimirMarkelov/clui), but i'm wo
 
 Also i'm thinking about making cli.
 
-### Feel free to contribute to this project by opening an issue (it can be also a question) or creating pull requests
+### Feel free to contribute to this project by opening an issue (it can be also a question) or creating a pull requests
 
 #### Star this project if you liked it or found it useful for you :3
