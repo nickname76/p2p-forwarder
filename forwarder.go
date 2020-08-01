@@ -9,16 +9,14 @@ import (
 	"time"
 
 	"github.com/libp2p/go-libp2p"
-	autonat "github.com/libp2p/go-libp2p-autonat"
 	connmgr "github.com/libp2p/go-libp2p-connmgr"
 	"github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/peer"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
+	noise "github.com/libp2p/go-libp2p-noise"
 	libp2pquic "github.com/libp2p/go-libp2p-quic-transport"
 	routing "github.com/libp2p/go-libp2p-routing"
-	secio "github.com/libp2p/go-libp2p-secio"
-	libp2ptls "github.com/libp2p/go-libp2p-tls"
 	"github.com/sparkymat/appdir"
 )
 
@@ -75,25 +73,6 @@ func NewForwarder() (*Forwarder, context.CancelFunc, error) {
 		return nil, nil, err
 	}
 
-	anatPriv, _, err := crypto.GenerateKeyPair(crypto.Ed25519, -1)
-	if err != nil {
-		cancel()
-		return nil, nil, err
-	}
-	hautonat, err := createLibp2pHost(ctx, anatPriv)
-	if err != nil {
-		cancel()
-		return nil, nil, err
-	}
-	_, err = autonat.New(ctx, h, autonat.EnableService(hautonat.Network()))
-	if err != nil {
-		cancel()
-		return nil, nil, err
-	}
-
-	// The last step to get fully up and running would be to connect to
-	// bootstrap peers (or any other peers).
-
 	// This connects to public bootstrappers
 	for _, addr := range dht.DefaultBootstrapPeers {
 		pi, _ := peer.AddrInfoFromP2pAddr(addr)
@@ -105,7 +84,8 @@ func NewForwarder() (*Forwarder, context.CancelFunc, error) {
 	f := &Forwarder{
 		host: h,
 
-		openPorts:          newOpenPortsStore(),
+		openPorts: newOpenPortsStore(),
+
 		portsSubscriptions: make(map[peer.ID]chan *portsManifest),
 		portsSubscribers:   make(map[peer.ID]struct{}),
 	}
@@ -182,13 +162,14 @@ func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, erro
 		libp2p.Identity(priv),
 		// Multiple listen addresses
 		libp2p.ListenAddrStrings(
-			"/ip4/0.0.0.0/tcp/9000",      // regular tcp connections
-			"/ip4/0.0.0.0/udp/9000/quic", // a UDP endpoint for the QUIC transport
+			"/ip4/0.0.0.0/udp/0/quic",
+			"/ip6/::/udp/0/quic",
 		),
-		// support TLS connections
-		libp2p.Security(libp2ptls.ID, libp2ptls.New),
-		// support secio connections
-		libp2p.Security(secio.ID, secio.New),
+		libp2p.DefaultListenAddrs,
+		// support Noise connections
+		libp2p.Security(noise.ID, noise.New),
+		// support any other default transports (secio, tls)
+		libp2p.DefaultSecurity,
 		// support QUIC - experimental
 		libp2p.Transport(libp2pquic.NewTransport),
 		// support any other default transports (TCP)
@@ -200,6 +181,7 @@ func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, erro
 			400,         // HighWater,
 			time.Minute, // GracePeriod
 		)),
+		libp2p.EnableNATService(),
 		// Attempt to open ports using uPNP for NATed hosts.
 		libp2p.NATPortMap(),
 		// Let this host use the DHT to find other hosts
@@ -210,6 +192,9 @@ func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, erro
 		// it finds it is behind NAT. Use libp2p.Relay(options...) to
 		// enable active relays and more.
 		libp2p.EnableAutoRelay(),
+		libp2p.DefaultStaticRelays(),
+
+		libp2p.DefaultPeerstore,
 	)
 }
 

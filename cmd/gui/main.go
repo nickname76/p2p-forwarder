@@ -54,7 +54,7 @@ func start(win *gtk.ApplicationWindow) {
 
 	win.Add(label)
 
-	time.Sleep(time.Second)
+	time.Sleep(time.Second) // p2pforwarder.NewForwarder()
 
 	label.Destroy()
 
