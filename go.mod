@@ -5,7 +5,6 @@ go 1.14
 require (
 	github.com/VladimirMarkelov/clui v1.2.1
 	github.com/atotto/clipboard v0.1.2 // indirect
-	github.com/gotk3/gotk3 v0.4.0
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/libp2p/go-libp2p v0.10.2
 	github.com/libp2p/go-libp2p-connmgr v0.2.4
