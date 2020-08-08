@@ -14,8 +14,8 @@ var (
 	ErrMaxConnections = errors.New("Max connections reached")
 	// ErrPortAlreadyOpened = error "Port already opened"
 	ErrPortAlreadyOpened = errors.New("Port already opened")
-	// ErrUnknownNetworkType = error "Unknown network type. It must be \"tcp\" or \"udp\""
-	ErrUnknownNetworkType = errors.New("Unknown network type. It must be \"tcp\" or \"udp\"")
+	// ErrUnknownNetworkType = error "Unknown network type, it must be \"tcp\" or \"udp\""
+	ErrUnknownNetworkType = errors.New("Unknown network type, it must be \"tcp\" or \"udp\"")
 )
 
 // OpenPort opens port in specified networkType - "tcp" or "udp"
@@ -63,8 +63,8 @@ func (f *Forwarder) addOpenPort(portsMap *openPortsStoreMap, port uint16) (cance
 }
 
 var (
-	listenipN    int
-	listenipNMux sync.Mutex
+	listenIPks    = make([]bool, 255)
+	listenIPksMux sync.Mutex
 )
 
 // Connect starts forwarding connections to `listenip`:`PORT` to passed id`:`PORT`
@@ -74,17 +74,27 @@ func (f *Forwarder) Connect(id string) (listenip string, cancel context.CancelFu
 		return "", nil, err
 	}
 
-	listenipNMux.Lock()
+	// Getting free ip part
+	listenIPksMux.Lock()
 
-	if listenipN > 255 {
+	lIPk := -1
+
+	for k, v := range listenIPks {
+		if v {
+			continue
+		}
+		lIPk = k
+		listenIPks[lIPk] = true
+	}
+	if lIPk == -1 {
 		return "", nil, ErrMaxConnections
 	}
-	listenipN++
 
-	listenip = "127.0.89." + strconv.Itoa(listenipN)
+	listenip = "127.0.89." + strconv.Itoa(lIPk)
 
-	listenipNMux.Unlock()
+	listenIPksMux.Unlock()
 
+	// Setting subscribtion
 	f.portsSubscriptionsMux.Lock()
 
 	subCh := make(chan *portsManifest, 5)
@@ -105,9 +115,14 @@ func (f *Forwarder) Connect(id string) (listenip string, cancel context.CancelFu
 			select {
 			case <-ctx.Done():
 				f.portsSubscriptionsMux.Lock()
-				close(subCh)
 				delete(f.portsSubscriptions, peerid)
+				close(subCh)
 				f.portsSubscriptionsMux.Unlock()
+
+				listenIPksMux.Lock()
+				listenIPks[lIPk] = false
+				listenIPksMux.Unlock()
+
 				break loop
 			case portsM := <-subCh:
 				if portsM.tcp != nil {
