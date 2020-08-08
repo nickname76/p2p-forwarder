@@ -83,8 +83,11 @@ func (f *Forwarder) Connect(id string) (listenip string, cancel context.CancelFu
 		if v {
 			continue
 		}
+
 		lIPk = k
 		listenIPks[lIPk] = true
+
+		break
 	}
 	if lIPk == -1 {
 		return "", nil, ErrMaxConnections
