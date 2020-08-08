@@ -97,7 +97,7 @@ func (f *Forwarder) Connect(id string) (listenip string, cancel context.CancelFu
 
 	listenIPksMux.Unlock()
 
-	// Setting subscribtion
+	// Registering subscription
 	f.portsSubscriptionsMux.Lock()
 
 	subCh := make(chan *portsManifest, 5)
