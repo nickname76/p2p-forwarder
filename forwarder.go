@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/libp2p/go-libp2p"
+	relay "github.com/libp2p/go-libp2p-circuit"
 	connmgr "github.com/libp2p/go-libp2p-connmgr"
 	"github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/libp2p/go-libp2p-core/host"
@@ -157,7 +158,9 @@ func loadUserPrivKey() (priv crypto.PrivKey, err error) {
 }
 
 func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, error) {
-	return libp2p.New(ctx,
+	var d *dht.IpfsDHT
+
+	h, err := libp2p.New(ctx,
 		// Use the keypair
 		libp2p.Identity(priv),
 		// Multiple listen addresses
@@ -174,6 +177,9 @@ func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, erro
 		libp2p.Transport(libp2pquic.NewTransport),
 		// support any other default transports (TCP)
 		libp2p.DefaultTransports,
+
+		libp2p.DefaultMuxers,
+
 		// Let's prevent our peer from having too many
 		// connections by attaching a connection manager.
 		libp2p.ConnectionManager(connmgr.NewConnManager(
@@ -186,15 +192,28 @@ func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, erro
 		libp2p.NATPortMap(),
 		// Let this host use the DHT to find other hosts
 		libp2p.Routing(func(h host.Host) (routing.PeerRouting, error) {
-			return dht.New(ctx, h)
+			var err error
+			d, err = dht.New(ctx, h, dht.BootstrapPeers(dht.GetDefaultBootstrapPeerAddrInfos()...))
+			return d, err
 		}),
 		// Let this host use relays and advertise itself on relays if
 		// it finds it is behind NAT.
 		libp2p.EnableAutoRelay(),
+		libp2p.EnableRelay(relay.OptActive),
 		libp2p.DefaultStaticRelays(),
 
 		libp2p.DefaultPeerstore,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = d.Bootstrap(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return h, err
 }
 
 // ID returns id of Forwarder
