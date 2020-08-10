@@ -80,6 +80,7 @@ func (uaf *uint16ArrFlags) Set(value string) error {
 
 var (
 	fwr          *p2pforwarder.Forwarder
+	fwrCancel    func()
 	connections  = make(map[string]func())
 	openTCPPorts = make(map[uint16]func())
 	openUDPPorts = make(map[uint16]func())
@@ -99,11 +100,9 @@ func main() {
 
 	zap.L().Info("Initialization...")
 
-	var (
-		cancel func()
-		err    error
-	)
-	fwr, cancel, err = p2pforwarder.NewForwarder()
+	var err error
+
+	fwr, fwrCancel, err = p2pforwarder.NewForwarder()
 	if err != nil {
 		zap.S().Error(err)
 	}
@@ -178,22 +177,24 @@ loop:
 		case str := <-cmdch:
 			executeCommand(str)
 		case <-termSignal:
-			zap.L().Info("Shutdown...")
-
-			cancel()
-
-			for _, cancel := range connections {
-				cancel()
-			}
-			for _, cancel := range openTCPPorts {
-				cancel()
-			}
-			for _, cancel := range openUDPPorts {
-				cancel()
-			}
-
+			shutdown()
 			break loop
 		}
+	}
+}
+func shutdown() {
+	zap.L().Info("Shutdown...")
+
+	fwrCancel()
+
+	for _, cancel := range connections {
+		cancel()
+	}
+	for _, cancel := range openTCPPorts {
+		cancel()
+	}
+	for _, cancel := range openUDPPorts {
+		cancel()
 	}
 }
 
@@ -233,8 +234,6 @@ func parseArgs(argsStr string, n int) []string {
 
 	if argStart != -1 {
 		args[a] = string(argsRunes[argStart:])
-		argStart = -1
-		a++
 	}
 
 	return args
@@ -247,89 +246,13 @@ func executeCommand(str string) {
 
 	switch cmd {
 	case "connect":
-		id := params[0]
-
-		zap.L().Info("Connecting to " + id)
-
-		listenip, cancel, err := fwr.Connect(id)
-		if err != nil {
-			zap.S().Error(err)
-			return
-		}
-
-		connections[id] = cancel
-
-		zap.L().Info("Connections to " + id + "'s ports are listened on " + listenip)
-
+		cmdConnect(params)
 	case "disconnect":
-		id := params[0]
-
-		close := connections[id]
-
-		if close == nil {
-			zap.L().Error("You are not connected to specified id")
-			return
-		}
-
-		zap.L().Info("Disconnecting from " + id)
-
-		close()
-
-		delete(connections, id)
-
+		cmdDisconnect(params)
 	case "open":
-		networkType := strings.ToLower(params[0])
-
-		portStr := params[1]
-		portUint64, err := strconv.ParseUint(portStr, 10, 16)
-		if err != nil {
-			zap.S().Error(err)
-			return
-		}
-		port := uint16(portUint64)
-
-		zap.L().Info("Opening " + networkType + ":" + portStr)
-
-		cancel, err := fwr.OpenPort(networkType, port)
-		if err != nil {
-			zap.S().Error(err)
-			return
-		}
-
-		switch networkType {
-		case "tcp":
-			openTCPPorts[port] = cancel
-		case "udp":
-			openUDPPorts[port] = cancel
-		}
+		cmdOpen(params)
 	case "close":
-		networkType := strings.ToLower(params[0])
-		portStr := params[1]
-		portUint64, err := strconv.ParseUint(portStr, 10, 16)
-		if err != nil {
-			zap.S().Error(err)
-			return
-		}
-		port := uint16(portUint64)
-
-		var cancel func()
-		switch networkType {
-		case "tcp":
-			cancel = openTCPPorts[port]
-		case "udp":
-			cancel = openUDPPorts[port]
-		}
-
-		if cancel == nil {
-			zap.L().Error("Specified port is not opened")
-			return
-		}
-
-		zap.L().Info("Closing " + networkType + ":" + portStr)
-
-		cancel()
-
-		delete(openTCPPorts, port)
+		cmdClose(params)
 	default:
 		zap.L().Info("")
 		zap.L().Info("Cli commands list:")
@@ -339,4 +262,94 @@ func executeCommand(str string) {
 		zap.L().Info("close [UDP_OR_UDP_HERE] [PORT_NUMBER_HERE]")
 		zap.L().Info("")
 	}
+}
+
+func cmdConnect(params []string) {
+	id := params[0]
+
+	zap.L().Info("Connecting to " + id)
+
+	listenip, cancel, err := fwr.Connect(id)
+	if err != nil {
+		zap.S().Error(err)
+		return
+	}
+
+	connections[id] = cancel
+
+	zap.L().Info("Connections to " + id + "'s ports are listened on " + listenip)
+}
+
+func cmdDisconnect(params []string) {
+	id := params[0]
+
+	close := connections[id]
+
+	if close == nil {
+		zap.L().Error("You are not connected to specified id")
+		return
+	}
+
+	zap.L().Info("Disconnecting from " + id)
+
+	close()
+
+	delete(connections, id)
+}
+
+func cmdOpen(params []string) {
+	networkType := strings.ToLower(params[0])
+
+	portStr := params[1]
+	portUint64, err := strconv.ParseUint(portStr, 10, 16)
+	if err != nil {
+		zap.S().Error(err)
+		return
+	}
+	port := uint16(portUint64)
+
+	zap.L().Info("Opening " + networkType + ":" + portStr)
+
+	cancel, err := fwr.OpenPort(networkType, port)
+	if err != nil {
+		zap.S().Error(err)
+		return
+	}
+
+	switch networkType {
+	case "tcp":
+		openTCPPorts[port] = cancel
+	case "udp":
+		openUDPPorts[port] = cancel
+	}
+}
+
+func cmdClose(params []string) {
+	networkType := strings.ToLower(params[0])
+	portStr := params[1]
+	portUint64, err := strconv.ParseUint(portStr, 10, 16)
+	if err != nil {
+		zap.S().Error(err)
+		return
+	}
+	port := uint16(portUint64)
+
+	var cancel func()
+	switch networkType {
+	case "tcp":
+		cancel = openTCPPorts[port]
+	case "udp":
+		cancel = openUDPPorts[port]
+	}
+
+	if cancel == nil {
+		zap.L().Error("Specified port is not opened")
+		return
+	}
+
+	zap.L().Info("Closing " + networkType + ":" + portStr)
+
+	cancel()
+
+	delete(openTCPPorts, port)
 }
