@@ -62,22 +62,6 @@ func (saf *strArrFlags) Set(value string) error {
 	return nil
 }
 
-type uint16ArrFlags []uint16
-
-func (uaf *uint16ArrFlags) String() string {
-	return fmt.Sprint([]uint16(*uaf))
-}
-
-func (uaf *uint16ArrFlags) Set(value string) error {
-	n, err := strconv.ParseUint(value, 10, 16)
-	if err != nil {
-		return err
-	}
-
-	*uaf = append(*uaf, uint16(n))
-	return nil
-}
-
 var (
 	fwr          *p2pforwarder.Forwarder
 	fwrCancel    func()
@@ -90,10 +74,10 @@ func main() {
 	connectIds := strArrFlags{}
 	flag.Var(&connectIds, "connect", "Add id you want connect to (can be used multiple times).")
 
-	tcpPorts := uint16ArrFlags{}
+	tcpPorts := strArrFlags{}
 	flag.Var(&tcpPorts, "tcp", "Add tcp port you want to open (can be used multiple times).")
 
-	udpPorts := uint16ArrFlags{}
+	udpPorts := strArrFlags{}
 	flag.Var(&udpPorts, "udp", "Add udp port you want to open (can be used multiple times).")
 
 	flag.Parse()
@@ -110,40 +94,14 @@ func main() {
 	zap.L().Info("Your id: " + fwr.ID())
 
 	for _, port := range tcpPorts {
-		zap.L().Info("Opening tcp:" + strconv.FormatUint(uint64(port), 10))
-
-		cancel, err := fwr.OpenPort("tcp", port)
-		if err != nil {
-			zap.S().Error(err)
-			continue
-		}
-
-		openTCPPorts[port] = cancel
+		cmdOpen([]string{"tcp", port})
 	}
 	for _, port := range udpPorts {
-		zap.L().Info("Opening udp: " + strconv.FormatUint(uint64(port), 10))
-
-		cancel, err := fwr.OpenPort("udp", port)
-		if err != nil {
-			zap.S().Error(err)
-			continue
-		}
-
-		openUDPPorts[port] = cancel
+		cmdOpen([]string{"udp", port})
 	}
 
 	for _, id := range connectIds {
-		zap.L().Info("Connecting to " + id)
-
-		listenip, cancel, err := fwr.Connect(id)
-		if err != nil {
-			zap.S().Error(err)
-			continue
-		}
-
-		connections[id] = cancel
-
-		zap.L().Info("Connections to " + id + "'s ports are listened on " + listenip)
+		cmdConnect([]string{id})
 	}
 
 	zap.L().Info("Initialization completed")
