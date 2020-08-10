@@ -76,9 +76,7 @@ func (f *Forwarder) Connect(id string) (listenip string, cancel context.CancelFu
 
 	// Getting free ip part
 	listenIPksMux.Lock()
-
 	lIPk := -1
-
 	for k, v := range listenIPks {
 		if v {
 			continue
@@ -92,17 +90,13 @@ func (f *Forwarder) Connect(id string) (listenip string, cancel context.CancelFu
 	if lIPk == -1 {
 		return "", nil, ErrMaxConnections
 	}
-
 	listenip = "127.0.89." + strconv.Itoa(lIPk)
-
 	listenIPksMux.Unlock()
 
 	// Registering subscription
 	f.portsSubscriptionsMux.Lock()
-
 	subCh := make(chan *portsManifest, 5)
 	f.portsSubscriptions[peerid] = subCh
-
 	f.portsSubscriptionsMux.Unlock()
 
 	ctx, cancel := context.WithCancel(context.Background())

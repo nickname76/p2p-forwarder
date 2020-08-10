@@ -91,7 +91,7 @@ func NewForwarder() (*Forwarder, context.CancelFunc, error) {
 	}
 
 	setDialHandler(f)
-	setPortsPubSubHandler(f)
+	setPortsSubHandler(f)
 
 	return f, cancel, nil
 }
@@ -170,7 +170,7 @@ func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, erro
 		libp2p.Security(noise.ID, noise.New),
 		// support any other default transports (secio, tls)
 		libp2p.DefaultSecurity,
-		// support QUIC - experimental
+		// support QUIC
 		libp2p.Transport(libp2pquic.NewTransport),
 		// support any other default transports (TCP)
 		libp2p.DefaultTransports,
@@ -189,8 +189,7 @@ func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, erro
 			return dht.New(ctx, h)
 		}),
 		// Let this host use relays and advertise itself on relays if
-		// it finds it is behind NAT. Use libp2p.Relay(options...) to
-		// enable active relays and more.
+		// it finds it is behind NAT.
 		libp2p.EnableAutoRelay(),
 		libp2p.DefaultStaticRelays(),
 

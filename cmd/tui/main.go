@@ -182,7 +182,7 @@ func createPortsControl(parent clui.Control, fwr *p2pforwarder.Forwarder) {
 
 	buttonA.OnClick(func(_ clui.Event) {
 		portstr := strings.TrimSpace(editFieldB.Title())
-		networkType := strings.TrimSpace(editFieldA.Title())
+		networkType := strings.ToLower(strings.TrimSpace(editFieldA.Title()))
 
 		port, err := strconv.ParseUint(portstr, 10, 16)
 		if err != nil {

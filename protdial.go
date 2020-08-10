@@ -19,17 +19,18 @@ const dialProtID protocol.ID = "/p2pforwarder/dial/1.0.0"
 
 func setDialHandler(f *Forwarder) {
 	f.host.SetStreamHandler(dialProtID, func(s network.Stream) {
-		defer s.Reset()
-
 		onInfoFn("'dial' from " + s.Conn().RemotePeer().String())
+
 		portBytes := make([]byte, 3)
 		_, err := io.ReadFull(s, portBytes)
 		if err != nil {
+			s.Reset()
 			onErrFn(fmt.Errorf("dial handler: %s", err))
 			return
 		}
 
 		protocolType := portBytes[0]
+		port := binary.BigEndian.Uint16(portBytes[1:])
 
 		var portsMap *openPortsStoreMap
 		switch protocolType {
@@ -38,40 +39,50 @@ func setDialHandler(f *Forwarder) {
 		case protocolTypeUDP:
 			portsMap = f.openPorts.udp
 		default:
+			s.Reset()
 			return
 		}
-
-		port := binary.BigEndian.Uint16(portBytes[1:])
 
 		portsMap.mux.Lock()
 		portContext := portsMap.ports[port]
 		portsMap.mux.Unlock()
 
 		if portContext == nil {
+			s.Reset()
 			return
 		}
 
 		var conn net.Conn
 
+		var addr string
+		portInt := int(port)
 		switch protocolType {
 		case protocolTypeTCP:
+			addr = "tcp:" + strconv.Itoa(portInt)
+
 			conn, err = net.DialTCP("tcp", nil, &net.TCPAddr{
 				IP:   nil,
-				Port: int(port),
+				Port: portInt,
 			})
 		case protocolTypeUDP:
+			addr = "udp:" + strconv.Itoa(portInt)
+
 			conn, err = net.DialUDP("udp", nil, &net.UDPAddr{
 				IP:   nil,
-				Port: int(port),
+				Port: portInt,
 			})
 		}
+		onInfoFn("Dialing to " + addr + " from " + s.Conn().RemotePeer().String())
 		if err != nil {
+			s.Reset()
 			onErrFn(fmt.Errorf("dial handler: %s", err))
 			return
 		}
-		defer conn.Close()
 
 		pipeBothIOs(portContext, s, conn)
+
+		s.Close()
+		conn.Close()
 	})
 }
 

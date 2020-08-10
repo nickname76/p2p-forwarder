@@ -239,8 +239,6 @@ github.com/libp2p/go-libp2p v0.7.4/go.mod h1:oXsBlTLF1q7pxr+9w6lqzS1ILpyHsaBPniV
 github.com/libp2p/go-libp2p v0.8.1/go.mod h1:QRNH9pwdbEBpx5DTJYg+qxcVaDMAz3Ee/qDKwXujH5o=
 github.com/libp2p/go-libp2p v0.8.3/go.mod h1:EsH1A+8yoWK+L4iKcbPYu6MPluZ+CHWI9El8cTaefiM=
 github.com/libp2p/go-libp2p v0.10.0/go.mod h1:yBJNpb+mGJdgrwbKAKrhPU0u3ogyNFTfjJ6bdM+Q/G8=
-github.com/libp2p/go-libp2p v0.10.2 h1:VQOo/Pbj9Ijco9jiMYN5ImAg236IjTXfnUPJ2OvbpLM=
-github.com/libp2p/go-libp2p v0.10.2/go.mod h1:BYckt6lmS/oA1SlRETSPWSUulCQKiZuTVsymVMc//HQ=
 github.com/libp2p/go-libp2p v0.10.3 h1:Bc8/VjmC+pICtK6xG8YgVutZvCdK0MsroWCHP+6AdFQ=
 github.com/libp2p/go-libp2p v0.10.3/go.mod h1:0ER6iPSaPeQjryNgOnm9bLNpMJCYmuw54xJXsVR17eE=
 github.com/libp2p/go-libp2p-autonat v0.1.1/go.mod h1:OXqkeGOY2xJVWKAGV2inNF5aKN/djNA3fdpCWloIudE=
@@ -248,8 +246,6 @@ github.com/libp2p/go-libp2p-autonat v0.2.0/go.mod h1:DX+9teU4pEEoZUqR1PiMlqliONQ
 github.com/libp2p/go-libp2p-autonat v0.2.1/go.mod h1:MWtAhV5Ko1l6QBsHQNSuM6b1sRkXrpk0/LqCr+vCVxI=
 github.com/libp2p/go-libp2p-autonat v0.2.2/go.mod h1:HsM62HkqZmHR2k1xgX34WuWDzk/nBwNHoeyyT4IWV6A=
 github.com/libp2p/go-libp2p-autonat v0.2.3/go.mod h1:2U6bNWCNsAG9LEbwccBDQbjzQ8Krdjge1jLTE9rdoMM=
-github.com/libp2p/go-libp2p-autonat v0.3.1 h1:60sc3NuQz+RxEb4ZVCRp/7uPtD7gnlLcOIKYNulzSIo=
-github.com/libp2p/go-libp2p-autonat v0.3.1/go.mod h1:0OzOi1/cVc7UcxfOddemYD5vzEqi4fwRbnZcJGLi68U=
 github.com/libp2p/go-libp2p-autonat v0.3.2 h1:OhDSwVVaq7liTaRIsFFYvsaPp0pn2yi0WazejZ4DUmo=
 github.com/libp2p/go-libp2p-autonat v0.3.2/go.mod h1:0OzOi1/cVc7UcxfOddemYD5vzEqi4fwRbnZcJGLi68U=
 github.com/libp2p/go-libp2p-blankhost v0.1.1/go.mod h1:pf2fvdLJPsC1FsVrNP3DUUvMzUts2dsLLBEpo1vW1ro=

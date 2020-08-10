@@ -23,20 +23,21 @@ type portsManifest struct {
 	udp []uint16
 }
 
-func setPortsPubSubHandler(f *Forwarder) {
+func setPortsSubHandler(f *Forwarder) {
 	f.host.SetStreamHandler(portssubProtID, func(s network.Stream) {
-		defer s.Reset()
-		onInfoFn("'portspubsub' from " + s.Conn().RemotePeer().String())
+		onInfoFn("'portssub' from " + s.Conn().RemotePeer().String())
 
 		modeBytes := make([]byte, 1)
 		_, err := io.ReadFull(s, modeBytes)
 		if err != nil {
-			onErrFn(fmt.Errorf("portspubsub handler: %s", err))
+			s.Reset()
+			onErrFn(fmt.Errorf("portssub handler: %s", err))
 			return
 		}
 
-		mode := modeBytes[0]
-		switch mode {
+		defer s.Close()
+
+		switch modeBytes[0] {
 		case portssubModeManifest:
 			f.portsSubscriptionsMux.Lock()
 			subCh := f.portsSubscriptions[s.Conn().RemotePeer()]
@@ -152,14 +153,14 @@ func (f *Forwarder) sendOpenPortsManifestBytes(peerid peer.ID, b []byte) error {
 	return nil
 }
 
-func readPortsManifest(s network.Stream) (portsM *portsManifest, err error) {
+func readPortsManifest(r io.Reader) (portsM *portsManifest, err error) {
 	portsM = new(portsManifest)
 
-	portsM.tcp, err = readPortsInManifest(s)
+	portsM.tcp, err = readPortsInManifest(r)
 	if err != nil {
 		return
 	}
-	portsM.udp, err = readPortsInManifest(s)
+	portsM.udp, err = readPortsInManifest(r)
 	if err != nil {
 		return
 	}
@@ -167,9 +168,9 @@ func readPortsManifest(s network.Stream) (portsM *portsManifest, err error) {
 	return
 }
 
-func readPortsInManifest(s network.Stream) (ports []uint16, err error) {
+func readPortsInManifest(r io.Reader) (ports []uint16, err error) {
 	portsNumBytes := make([]byte, 2)
-	_, err = io.ReadFull(s, portsNumBytes)
+	_, err = io.ReadFull(r, portsNumBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +181,7 @@ func readPortsInManifest(s network.Stream) (ports []uint16, err error) {
 
 	for i := 0; i < portsNum; i++ {
 		portBytes := make([]byte, 2)
-		_, err = io.ReadFull(s, portBytes)
+		_, err = io.ReadFull(r, portBytes)
 		if err != nil {
 			return nil, fmt.Errorf("readPortsManifest: %s", err)
 		}
