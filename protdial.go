@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"net"
 	"strconv"
-	"time"
+	"sync"
 
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
@@ -102,7 +102,7 @@ func (f *Forwarder) dialTCP(ctx context.Context, peerid peer.ID, protocolType by
 		Port: lport,
 	})
 	if err != nil {
-		onErrFn(fmt.Errorf("dial tcp: %s", err))
+		onErrFn(fmt.Errorf("dialTCP: %s", err))
 
 		for i := 0; i < 4; i++ {
 			lport = rand.Intn(65535-1024) + 1024
@@ -113,7 +113,7 @@ func (f *Forwarder) dialTCP(ctx context.Context, peerid peer.ID, protocolType by
 			})
 
 			if err != nil {
-				onErrFn(fmt.Errorf("dial tcp: %s", err))
+				onErrFn(fmt.Errorf("dialTCP: %s", err))
 			} else {
 				break
 			}
@@ -133,7 +133,7 @@ func (f *Forwarder) dialTCP(ctx context.Context, peerid peer.ID, protocolType by
 		for {
 			conn, err := ln.Accept()
 			if err != nil {
-				onErrFn(fmt.Errorf("dial tcp ln accept: %s", err))
+				onErrFn(fmt.Errorf("dialTCP: %s", err))
 				select {
 				case <-ctx.Done():
 					break loop
@@ -147,7 +147,7 @@ func (f *Forwarder) dialTCP(ctx context.Context, peerid peer.ID, protocolType by
 
 				s, err := f.host.NewStream(ctx, peerid, dialProtID)
 				if err != nil {
-					onErrFn(fmt.Errorf("startDialStream: %s", err))
+					onErrFn(fmt.Errorf("dialTCP: %s", err))
 					return
 				}
 				defer s.Close()
@@ -158,7 +158,7 @@ func (f *Forwarder) dialTCP(ctx context.Context, peerid peer.ID, protocolType by
 
 				_, err = s.Write(p)
 				if err != nil {
-					onErrFn(fmt.Errorf("startDialStream: %s", err))
+					onErrFn(fmt.Errorf("dialTCP: %s", err))
 					return
 				}
 
@@ -173,6 +173,15 @@ func (f *Forwarder) dialTCP(ctx context.Context, peerid peer.ID, protocolType by
 	onInfoFn("Closed " + addressstr)
 }
 
+type udpConnAddrWriter struct {
+	conn *net.UDPConn
+	addr *net.UDPAddr
+}
+
+func (ucaw *udpConnAddrWriter) Write(p []byte) (int, error) {
+	return ucaw.conn.WriteToUDP(p, ucaw.addr)
+}
+
 func (f *Forwarder) dialUDP(ctx context.Context, peerid peer.ID, protocolType byte, listenip string, port uint16) {
 	lport := int(port)
 
@@ -182,7 +191,7 @@ func (f *Forwarder) dialUDP(ctx context.Context, peerid peer.ID, protocolType by
 	})
 
 	if err != nil {
-		onErrFn(fmt.Errorf("dial udp ln: %s", err))
+		onErrFn(fmt.Errorf("dialUDP: %s", err))
 
 		for i := 0; i < 4; i++ {
 			lport = rand.Intn(65535-1024) + 1024
@@ -193,7 +202,7 @@ func (f *Forwarder) dialUDP(ctx context.Context, peerid peer.ID, protocolType by
 			})
 
 			if err != nil {
-				onErrFn(fmt.Errorf("dial udp: %s", err))
+				onErrFn(fmt.Errorf("dialUDP: %s", err))
 			} else {
 				break
 			}
@@ -208,6 +217,11 @@ func (f *Forwarder) dialUDP(ctx context.Context, peerid peer.ID, protocolType by
 
 	onInfoFn("Listening " + addressstr)
 
+	var (
+		buf      = make([]byte, 1024)
+		conns    = map[string]network.Stream{}
+		connsMux sync.Mutex
+	)
 	go func() {
 	loop:
 		for {
@@ -215,27 +229,65 @@ func (f *Forwarder) dialUDP(ctx context.Context, peerid peer.ID, protocolType by
 			case <-ctx.Done():
 				break loop
 			default:
-				s, err := f.host.NewStream(ctx, peerid, dialProtID)
+				n, udpaddr, err := conn.ReadFromUDP(buf)
 				if err != nil {
-					onErrFn(fmt.Errorf("startDialStream: %s", err))
-					time.Sleep(time.Second * 15)
+					onErrFn(fmt.Errorf("dialUDP: %s", err))
 					continue loop
 				}
 
-				p := make([]byte, 3)
-				p[0] = protocolType
-				binary.BigEndian.PutUint16(p[1:3], port)
+				connsMux.Lock()
+				s, ok := conns[udpaddr.String()]
+				if !ok {
+					s, err = f.host.NewStream(ctx, peerid, dialProtID)
+					if err != nil {
+						connsMux.Unlock()
+						onErrFn(fmt.Errorf("dialUDP: %s", err))
+						continue loop
+					}
 
-				_, err = s.Write(p)
+					p := make([]byte, 3)
+					p[0] = protocolType
+					binary.BigEndian.PutUint16(p[1:3], port)
+
+					_, err = s.Write(p)
+					if err != nil {
+						connsMux.Unlock()
+						s.Close()
+						onErrFn(fmt.Errorf("dialUDP: %s", err))
+						continue loop
+					}
+
+					conns[udpaddr.String()] = s
+
+					go func() {
+						_, err := io.Copy(&udpConnAddrWriter{
+							conn: conn,
+							addr: udpaddr,
+						}, s)
+						if err != nil {
+							onErrFn(fmt.Errorf("dialUDP: %s", err))
+						}
+
+						s.Close()
+
+						connsMux.Lock()
+						delete(conns, udpaddr.String())
+						connsMux.Unlock()
+
+					}()
+				}
+				connsMux.Unlock()
+
+				_, err = s.Write(buf[:n])
 				if err != nil {
+					onErrFn(fmt.Errorf("dialUDP: %s", err))
+
 					s.Close()
-					onErrFn(fmt.Errorf("startDialStream: %s", err))
-					continue loop
+
+					connsMux.Lock()
+					delete(conns, udpaddr.String())
+					connsMux.Unlock()
 				}
-
-				pipeBothIOs(ctx, conn, s)
-
-				s.Close()
 			}
 		}
 	}()

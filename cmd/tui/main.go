@@ -124,7 +124,11 @@ func createConnections(parent clui.Control, fwr *p2pforwarder.Forwarder) {
 
 		ok := listBox.AddItem(connInfo)
 		if !ok {
-			panic(ok)
+			clui.RefreshScreen()
+			ok = listBox.AddItem(connInfo)
+			if !ok {
+				panic(ok)
+			}
 		}
 
 		connsMap[connInfo] = cancel
@@ -142,14 +146,16 @@ func createConnections(parent clui.Control, fwr *p2pforwarder.Forwarder) {
 			return
 		}
 
+		ok = listBox.RemoveItem(itemid)
+		if !ok {
+			listBox.SelectItem(0)
+			clui.RefreshScreen()
+			return
+		}
+
 		connsMap[connInfo]()
 
 		delete(connsMap, connInfo)
-
-		ok = listBox.RemoveItem(itemid)
-		if !ok {
-			panic(ok)
-		}
 	})
 }
 
@@ -200,7 +206,11 @@ func createPortsControl(parent clui.Control, fwr *p2pforwarder.Forwarder) {
 
 		ok := listBox.AddItem(portInfo)
 		if !ok {
-			panic(ok)
+			clui.RefreshScreen()
+			ok = listBox.AddItem(portInfo)
+			if !ok {
+				panic(ok)
+			}
 		}
 
 		portsMap[portInfo] = cancel
@@ -218,13 +228,15 @@ func createPortsControl(parent clui.Control, fwr *p2pforwarder.Forwarder) {
 			return
 		}
 
+		ok = listBox.RemoveItem(itemid)
+		if !ok {
+			listBox.SelectItem(0)
+			clui.RefreshScreen()
+			return
+		}
+
 		portsMap[portInfo]()
 
 		delete(portsMap, portInfo)
-
-		ok = listBox.RemoveItem(itemid)
-		if !ok {
-			panic(ok)
-		}
 	})
 }
