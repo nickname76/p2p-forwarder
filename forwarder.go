@@ -196,8 +196,6 @@ func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, erro
 			d, err = dht.New(ctx, h, dht.BootstrapPeers(dht.GetDefaultBootstrapPeerAddrInfos()...))
 			return d, err
 		}),
-		// Let this host use relays and advertise itself on relays if
-		// it finds it is behind NAT.
 		libp2p.EnableAutoRelay(),
 		libp2p.EnableRelay(relay.OptActive),
 		libp2p.DefaultStaticRelays(),
