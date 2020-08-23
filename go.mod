@@ -12,7 +12,7 @@ require (
 	github.com/libp2p/go-libp2p-core v0.6.1
 	github.com/libp2p/go-libp2p-kad-dht v0.8.3
 	github.com/libp2p/go-libp2p-noise v0.1.1
-	github.com/libp2p/go-libp2p-quic-transport v0.7.1
+	github.com/libp2p/go-libp2p-quic-transport v0.8.0
 	github.com/libp2p/go-libp2p-routing v0.1.0
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/nsf/termbox-go v0.0.0-20200418040025-38ba6e5628f1 // indirect
