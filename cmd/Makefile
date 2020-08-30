@@ -71,7 +71,7 @@ run: run-tui
 run-tui:
 	cd ./tui; $(GOCMD) run main.go $(ARGS)
 run-cli:
-	cd ./tui; $(GOCMD) run main.go $(ARGS)
+	cd ./cli; $(GOCMD) run main.go $(ARGS)
 
 deps:
 	$(GOCMD) get

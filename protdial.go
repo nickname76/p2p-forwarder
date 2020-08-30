@@ -8,11 +8,11 @@ import (
 	"math/rand"
 	"net"
 	"strconv"
-	"sync"
 
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/protocol"
+	"github.com/pion/udp"
 )
 
 const dialProtID protocol.ID = "/p2pforwarder/dial/1.0.0"
@@ -86,34 +86,51 @@ func setDialHandler(f *Forwarder) {
 	})
 }
 
-func (f *Forwarder) dial(ctx context.Context, peerid peer.ID, protocolType byte, listenip string, port uint16) {
-	switch protocolType {
-	case protocolTypeTCP:
-		f.dialTCP(ctx, peerid, protocolType, listenip, port)
-	case protocolTypeUDP:
-		f.dialUDP(ctx, peerid, protocolType, listenip, port)
-	}
+func createAddrInfoString(network string, listenip string, lport int, port int) string {
+	return network + ":" + listenip + ":" + strconv.Itoa(lport) + " -> " + network + ":" + strconv.Itoa(port)
 }
 
-func (f *Forwarder) dialTCP(ctx context.Context, peerid peer.ID, protocolType byte, listenip string, port uint16) {
+func (f *Forwarder) dial(ctx context.Context, peerid peer.ID, protocolType byte, listenip string, port uint16) {
 	lport := int(port)
-	ln, err := net.ListenTCP("tcp", &net.TCPAddr{
-		IP:   net.ParseIP(listenip),
-		Port: lport,
-	})
+
+	var addressinfostr string
+
+	var lnfunc func(lip net.IP, port int) (net.Listener, error)
+
+	switch protocolType {
+	case protocolTypeTCP:
+		addressinfostr = createAddrInfoString("tcp", listenip, lport, int(port))
+
+		lnfunc = func(lip net.IP, port int) (net.Listener, error) {
+			return net.ListenTCP("tcp", &net.TCPAddr{
+				IP:   lip,
+				Port: port,
+			})
+		}
+	case protocolTypeUDP:
+		addressinfostr = createAddrInfoString("udp", listenip, lport, int(port))
+
+		lnfunc = func(lip net.IP, port int) (net.Listener, error) {
+			return udp.Listen("udp", &net.UDPAddr{
+				IP:   lip,
+				Port: port,
+			})
+		}
+	}
+
+	lip := net.ParseIP(listenip)
+
+	ln, err := lnfunc(lip, lport)
 	if err != nil {
-		onErrFn(fmt.Errorf("dialTCP: %s", err))
+		onErrFn(fmt.Errorf("dial: %s", err))
 
 		for i := 0; i < 4; i++ {
 			lport = rand.Intn(65535-1024) + 1024
 
-			ln, err = net.ListenTCP("tcp", &net.TCPAddr{
-				IP:   net.ParseIP(listenip),
-				Port: lport,
-			})
+			ln, err = lnfunc(lip, lport)
 
 			if err != nil {
-				onErrFn(fmt.Errorf("dialTCP: %s", err))
+				onErrFn(fmt.Errorf("dial: %s", err))
 			} else {
 				break
 			}
@@ -124,16 +141,14 @@ func (f *Forwarder) dialTCP(ctx context.Context, peerid peer.ID, protocolType by
 		}
 	}
 
-	addressstr := "tcp:" + listenip + ":" + strconv.Itoa(lport) + " -> " + "tcp:" + strconv.FormatUint(uint64(port), 10)
-
-	onInfoFn("Listening " + addressstr)
+	onInfoFn("Listening " + addressinfostr)
 
 	go func() {
 	loop:
 		for {
 			conn, err := ln.Accept()
 			if err != nil {
-				onErrFn(fmt.Errorf("dialTCP: %s", err))
+				onErrFn(fmt.Errorf("dial: %s", err))
 				select {
 				case <-ctx.Done():
 					break loop
@@ -147,7 +162,7 @@ func (f *Forwarder) dialTCP(ctx context.Context, peerid peer.ID, protocolType by
 
 				s, err := f.host.NewStream(ctx, peerid, dialProtID)
 				if err != nil {
-					onErrFn(fmt.Errorf("dialTCP: %s", err))
+					onErrFn(fmt.Errorf("dial: %s", err))
 					return
 				}
 				defer s.Close()
@@ -158,7 +173,7 @@ func (f *Forwarder) dialTCP(ctx context.Context, peerid peer.ID, protocolType by
 
 				_, err = s.Write(p)
 				if err != nil {
-					onErrFn(fmt.Errorf("dialTCP: %s", err))
+					onErrFn(fmt.Errorf("dial: %s", err))
 					return
 				}
 
@@ -170,132 +185,7 @@ func (f *Forwarder) dialTCP(ctx context.Context, peerid peer.ID, protocolType by
 	<-ctx.Done()
 	ln.Close()
 
-	onInfoFn("Closed " + addressstr)
-}
-
-type udpConnAddrWriter struct {
-	conn *net.UDPConn
-	addr *net.UDPAddr
-}
-
-func (ucaw *udpConnAddrWriter) Write(p []byte) (int, error) {
-	return ucaw.conn.WriteToUDP(p, ucaw.addr)
-}
-
-func (f *Forwarder) dialUDP(ctx context.Context, peerid peer.ID, protocolType byte, listenip string, port uint16) {
-	lport := int(port)
-
-	conn, err := net.ListenUDP("udp", &net.UDPAddr{
-		IP:   net.ParseIP(listenip),
-		Port: lport,
-	})
-
-	if err != nil {
-		onErrFn(fmt.Errorf("dialUDP: %s", err))
-
-		for i := 0; i < 4; i++ {
-			lport = rand.Intn(65535-1024) + 1024
-
-			conn, err = net.ListenUDP("udp", &net.UDPAddr{
-				IP:   net.ParseIP(listenip),
-				Port: lport,
-			})
-
-			if err != nil {
-				onErrFn(fmt.Errorf("dialUDP: %s", err))
-			} else {
-				break
-			}
-		}
-
-		if err != nil {
-			return
-		}
-	}
-
-	addressstr := "udp:" + listenip + ":" + strconv.Itoa(lport) + " -> " + "udp:" + strconv.FormatUint(uint64(port), 10)
-
-	onInfoFn("Listening " + addressstr)
-
-	var (
-		buf      = make([]byte, 1024)
-		conns    = map[string]network.Stream{}
-		connsMux sync.Mutex
-	)
-	go func() {
-	loop:
-		for {
-			select {
-			case <-ctx.Done():
-				break loop
-			default:
-				n, udpaddr, err := conn.ReadFromUDP(buf)
-				if err != nil {
-					onErrFn(fmt.Errorf("dialUDP: %s", err))
-					continue loop
-				}
-
-				connsMux.Lock()
-				s, ok := conns[udpaddr.String()]
-				if !ok {
-					s, err = f.host.NewStream(ctx, peerid, dialProtID)
-					if err != nil {
-						connsMux.Unlock()
-						onErrFn(fmt.Errorf("dialUDP: %s", err))
-						continue loop
-					}
-
-					p := make([]byte, 3)
-					p[0] = protocolType
-					binary.BigEndian.PutUint16(p[1:3], port)
-
-					_, err = s.Write(p)
-					if err != nil {
-						connsMux.Unlock()
-						s.Close()
-						onErrFn(fmt.Errorf("dialUDP: %s", err))
-						continue loop
-					}
-
-					conns[udpaddr.String()] = s
-
-					go func() {
-						_, err := io.Copy(&udpConnAddrWriter{
-							conn: conn,
-							addr: udpaddr,
-						}, s)
-						if err != nil {
-							onErrFn(fmt.Errorf("dialUDP: %s", err))
-						}
-
-						s.Close()
-
-						connsMux.Lock()
-						delete(conns, udpaddr.String())
-						connsMux.Unlock()
-
-					}()
-				}
-				connsMux.Unlock()
-
-				_, err = s.Write(buf[:n])
-				if err != nil {
-					onErrFn(fmt.Errorf("dialUDP: %s", err))
-
-					s.Close()
-
-					connsMux.Lock()
-					delete(conns, udpaddr.String())
-					connsMux.Unlock()
-				}
-			}
-		}
-	}()
-
-	<-ctx.Done()
-	conn.Close()
-
-	onInfoFn("Closed " + addressstr)
+	onInfoFn("Closed " + addressinfostr)
 }
 
 func pipeBothIOs(ctx context.Context, a io.ReadWriter, b io.ReadWriter) {
