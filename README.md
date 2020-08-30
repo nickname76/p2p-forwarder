@@ -21,6 +21,6 @@ Project is on early beta stage. I recommend you to use it only for personal purp
 
 Current uis are cli and tui ([clui](https://github.com/VladimirMarkelov/clui)).
 
-### Feel free to contribute to this project by opening an issue (it can be also a question) or creating a pull requests
+### Feel free to contribute to this project by opening an issue (it may be a question) or creating a pull request
 
 #### Star this project if you liked it or found it useful for you :3
