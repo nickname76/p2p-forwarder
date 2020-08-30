@@ -46,7 +46,7 @@ define build-and-zip-all-targets
 	$(call build-and-zip,$(1),linux,arm)
 	$(call build-and-zip,$(1),linux,arm64)
 
-	-rm $(BUILDS_DIRECTORY)/$(BINARY_NAME)
+	-rm $(BUILDS_DIRECTORY)/$(BINARY_NAME)-$(1)
 	
 	$(call build,$(1),windows,386,$(BUILDS_DIRECTORY)/$(BINARY_NAME)-$(1).exe)
 	cd $(BUILDS_DIRECTORY); zip "./$(BINARY_NAME)-$(1)_windows_386.zip" "./$(BINARY_NAME)-$(1).exe"
