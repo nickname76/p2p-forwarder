@@ -5,10 +5,8 @@
 *.so
 *.dylib
 
-# Project builds
-/cmd/tui-builds
-/cmd/gui-builds
-/cmd/cli-builds
+# Binary builds
+/cmd/builds
 
 # Test binary, built with `go test -c`
 *.test

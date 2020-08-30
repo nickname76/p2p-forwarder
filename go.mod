@@ -14,6 +14,9 @@ require (
 	github.com/libp2p/go-libp2p-noise v0.1.1
 	github.com/libp2p/go-libp2p-quic-transport v0.8.0
 	github.com/libp2p/go-libp2p-routing v0.1.0
+	github.com/libp2p/go-libp2p-tls v0.1.3
+	github.com/libp2p/go-tcp-transport v0.2.1
+	github.com/libp2p/go-ws-transport v0.3.1
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/nsf/termbox-go v0.0.0-20200418040025-38ba6e5628f1 // indirect
 	github.com/sparkymat/appdir v0.0.0-20190803090504-1c2ab64aee87

@@ -18,6 +18,9 @@ import (
 	noise "github.com/libp2p/go-libp2p-noise"
 	libp2pquic "github.com/libp2p/go-libp2p-quic-transport"
 	routing "github.com/libp2p/go-libp2p-routing"
+	libp2ptls "github.com/libp2p/go-libp2p-tls"
+	"github.com/libp2p/go-tcp-transport"
+	websocket "github.com/libp2p/go-ws-transport"
 	"github.com/sparkymat/appdir"
 )
 
@@ -72,14 +75,6 @@ func NewForwarder() (*Forwarder, context.CancelFunc, error) {
 	if err != nil {
 		cancel()
 		return nil, nil, err
-	}
-
-	// This connects to public bootstrappers
-	for _, addr := range dht.DefaultBootstrapPeers {
-		pi, _ := peer.AddrInfoFromP2pAddr(addr)
-		// We ignore errors as some bootstrap peers may be down
-		// and that is fine.
-		h.Connect(ctx, *pi)
 	}
 
 	f := &Forwarder{
@@ -161,49 +156,58 @@ func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, erro
 	var d *dht.IpfsDHT
 
 	h, err := libp2p.New(ctx,
-		// Use the keypair
 		libp2p.Identity(priv),
-		// Multiple listen addresses
-		libp2p.ListenAddrStrings(
-			"/ip4/0.0.0.0/udp/0/quic",
-			"/ip6/::/udp/0/quic",
-		),
-		libp2p.DefaultListenAddrs,
-		// support Noise connections
-		libp2p.Security(noise.ID, noise.New),
-		// support any other default transports (secio, tls)
-		libp2p.DefaultSecurity,
-		// support QUIC
+
 		libp2p.Transport(libp2pquic.NewTransport),
-		// support any other default transports (TCP)
-		libp2p.DefaultTransports,
+		libp2p.Transport(tcp.NewTCPTransport),
+		libp2p.Transport(websocket.New),
 
 		libp2p.DefaultMuxers,
 
-		// Let's prevent our peer from having too many
-		// connections by attaching a connection manager.
+		libp2p.Security(noise.ID, noise.New),
+		libp2p.Security(libp2ptls.ID, libp2ptls.New),
+
+		libp2p.ListenAddrStrings(
+			"/ip4/0.0.0.0/udp/0/quic",
+			"/ip6/::/udp/0/quic",
+
+			"/ip4/0.0.0.0/tcp/0",
+			"/ip6/::/tcp/0",
+		),
+
 		libp2p.ConnectionManager(connmgr.NewConnManager(
 			100,         // Lowwater
 			400,         // HighWater,
 			time.Minute, // GracePeriod
 		)),
-		libp2p.EnableNATService(),
-		// Attempt to open ports using uPNP for NATed hosts.
+
 		libp2p.NATPortMap(),
-		// Let this host use the DHT to find other hosts
-		libp2p.Routing(func(h host.Host) (routing.PeerRouting, error) {
-			var err error
-			d, err = dht.New(ctx, h, dht.BootstrapPeers(dht.GetDefaultBootstrapPeerAddrInfos()...))
-			return d, err
-		}),
+
+		libp2p.EnableNATService(),
+
 		libp2p.EnableAutoRelay(),
 		libp2p.EnableRelay(relay.OptActive),
 		libp2p.DefaultStaticRelays(),
 
 		libp2p.DefaultPeerstore,
+
+		libp2p.Routing(func(h host.Host) (routing.PeerRouting, error) {
+			var err error
+			d, err = dht.New(ctx, h, dht.BootstrapPeers(dht.GetDefaultBootstrapPeerAddrInfos()...))
+			return d, err
+		}),
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// This connects to public bootstrappers
+	for _, addr := range dht.DefaultBootstrapPeers {
+		pi, err := peer.AddrInfoFromP2pAddr(addr)
+		if err != nil {
+			panic(err)
+		}
+		h.Connect(ctx, *pi)
 	}
 
 	err = d.Bootstrap(ctx)

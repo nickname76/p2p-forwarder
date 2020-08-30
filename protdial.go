@@ -124,7 +124,7 @@ func (f *Forwarder) dialTCP(ctx context.Context, peerid peer.ID, protocolType by
 		}
 	}
 
-	addressstr := "tcp:" + listenip + ":" + strconv.Itoa(lport) + " -> " + strconv.FormatUint(uint64(port), 10)
+	addressstr := "tcp:" + listenip + ":" + strconv.Itoa(lport) + " -> " + "tcp:" + strconv.FormatUint(uint64(port), 10)
 
 	onInfoFn("Listening " + addressstr)
 
@@ -213,7 +213,7 @@ func (f *Forwarder) dialUDP(ctx context.Context, peerid peer.ID, protocolType by
 		}
 	}
 
-	addressstr := "udp:" + listenip + ":" + strconv.Itoa(lport) + " -> " + strconv.FormatUint(uint64(port), 10)
+	addressstr := "udp:" + listenip + ":" + strconv.Itoa(lport) + " -> " + "udp:" + strconv.FormatUint(uint64(port), 10)
 
 	onInfoFn("Listening " + addressstr)
 
