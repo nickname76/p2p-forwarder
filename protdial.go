@@ -223,6 +223,7 @@ func pipeBothIOsAndClose(parentctx context.Context, a io.ReadWriteCloser, b io.R
 		wg.Done()
 		if err != nil {
 			onErrFn(fmt.Errorf("pipeBothIOsAndClose b<-a: %s", err))
+			cancel()
 		}
 	}()
 	go func() {
@@ -230,6 +231,7 @@ func pipeBothIOsAndClose(parentctx context.Context, a io.ReadWriteCloser, b io.R
 		wg.Done()
 		if err != nil {
 			onErrFn(fmt.Errorf("pipeBothIOsAndClose a<-b: %s", err))
+			cancel()
 		}
 	}()
 
