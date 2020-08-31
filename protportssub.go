@@ -25,7 +25,7 @@ type portsManifest struct {
 
 func setPortsSubHandler(f *Forwarder) {
 	f.host.SetStreamHandler(portssubProtID, func(s network.Stream) {
-		onInfoFn("'portssub' from " + s.Conn().RemotePeer().String())
+		onInfoFn("'portssub' from " + s.Conn().RemotePeer().Pretty())
 
 		modeBytes := make([]byte, 1)
 		_, err := io.ReadFull(s, modeBytes)
@@ -34,8 +34,6 @@ func setPortsSubHandler(f *Forwarder) {
 			onErrFn(fmt.Errorf("portssub handler: %s", err))
 			return
 		}
-
-		defer s.Close()
 
 		switch modeBytes[0] {
 		case portssubModeManifest:
@@ -49,11 +47,13 @@ func setPortsSubHandler(f *Forwarder) {
 
 			portsM, err := readPortsManifest(s)
 			if err != nil {
+				s.Reset()
 				onErrFn(err)
 				return
 			}
 			_, err = s.Write([]byte{0x01})
 			if err != nil {
+				s.Reset()
 				onErrFn(err)
 				return
 			}
@@ -69,6 +69,8 @@ func setPortsSubHandler(f *Forwarder) {
 
 			f.sendPortsManifestToSubscriber(s.Conn().RemotePeer(), b)
 		}
+
+		s.Close()
 	})
 }
 
@@ -133,22 +135,26 @@ func (f *Forwarder) sendOpenPortsManifestBytes(peerid peer.ID, b []byte) error {
 	if err != nil {
 		return fmt.Errorf("sendOpenPortsManifestBytes: %s", err)
 	}
-	defer s.Close()
 
 	_, err = s.Write([]byte{portssubModeManifest})
 	if err != nil {
+		s.Reset()
 		return fmt.Errorf("sendOpenPortsManifestBytes: %s", err)
 	}
 	_, err = s.Write(b)
 	if err != nil {
+		s.Reset()
 		return fmt.Errorf("sendOpenPortsManifestBytes: %s", err)
 	}
 
 	// Test, if connection have been reset or not
 	_, err = io.ReadFull(s, make([]byte, 1))
 	if err != nil {
+		s.Reset()
 		return fmt.Errorf("sendOpenPortsManifestBytes: %s", err)
 	}
+
+	s.Close()
 
 	return nil
 }

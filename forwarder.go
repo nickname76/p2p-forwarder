@@ -220,7 +220,7 @@ func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, erro
 
 // ID returns id of Forwarder
 func (f *Forwarder) ID() string {
-	return f.host.ID().String()
+	return f.host.ID().Pretty()
 }
 
 var onErrFn = func(err error) {

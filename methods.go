@@ -138,14 +138,16 @@ func (f *Forwarder) Connect(id string) (listenip string, cancel context.CancelFu
 		cancel()
 		return "", nil, err
 	}
-	defer s.Close()
 
 	// This starts subscription
 	_, err = s.Write([]byte{portssubModeSubscribe})
 	if err != nil {
+		s.Reset()
 		cancel()
 		return "", nil, err
 	}
+
+	s.Close()
 
 	return listenip, cancel, nil
 }
