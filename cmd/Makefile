@@ -53,7 +53,7 @@ define build-and-zip-all-targets
 	$(call build,$(1),windows,amd64,$(BUILDS_DIRECTORY)/$(BINARY_NAME)-$(1).exe)
 	cd $(BUILDS_DIRECTORY); zip "./$(BINARY_NAME)-$(1)_windows_amd64.zip" "./$(BINARY_NAME)-$(1).exe"
 
-	-rm $(2)/$(BINARY_NAME)-$(1).exe
+	-rm $(BUILDS_DIRECTORY)/$(BINARY_NAME)-$(1).exe
 endef
 
 all:
