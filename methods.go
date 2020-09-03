@@ -90,6 +90,7 @@ func (f *Forwarder) Connect(id string) (listenip string, cancel context.CancelFu
 		break
 	}
 	if lIPk == -1 {
+		return "", nil, ErrMaxConnections
 	}
 	listenip = "127.0.89." + strconv.Itoa(lIPk)
 	listenIPksMux.Unlock()
