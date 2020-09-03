@@ -16,6 +16,8 @@ var (
 	ErrPortAlreadyOpened = errors.New("Port already opened")
 	// ErrUnknownNetworkType = error "Unknown network type, it must be \"tcp\" or \"udp\""
 	ErrUnknownNetworkType = errors.New("Unknown network type, it must be \"tcp\" or \"udp\"")
+	// ErrConnectionExists = error "You are already connected to specified host"
+	ErrConnectionExists = errors.New("You are already connected to specified host")
 )
 
 // OpenPort opens port in specified networkType - "tcp" or "udp"
@@ -68,7 +70,6 @@ var (
 )
 
 // Connect starts forwarding connections to `listenip`:`PORT` to passed id`:`PORT`
-// FIXME: check if connection is already exists
 func (f *Forwarder) Connect(id string) (listenip string, cancel context.CancelFunc, err error) {
 	peerid, err := peer.IDB58Decode(id)
 	if err != nil {
@@ -89,13 +90,21 @@ func (f *Forwarder) Connect(id string) (listenip string, cancel context.CancelFu
 		break
 	}
 	if lIPk == -1 {
-		return "", nil, ErrMaxConnections
 	}
 	listenip = "127.0.89." + strconv.Itoa(lIPk)
 	listenIPksMux.Unlock()
 
 	// Registering subscription
 	f.portsSubscriptionsMux.Lock()
+	if _, ok := f.portsSubscriptions[peerid]; ok {
+		f.portsSubscriptionsMux.Unlock()
+
+		listenIPksMux.Lock()
+		listenIPks[lIPk] = false
+		listenIPksMux.Unlock()
+
+		return "", nil, ErrConnectionExists
+	}
 	subCh := make(chan *portsManifest, 5)
 	f.portsSubscriptions[peerid] = subCh
 	f.portsSubscriptionsMux.Unlock()

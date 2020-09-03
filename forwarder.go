@@ -19,6 +19,7 @@ import (
 	libp2pquic "github.com/libp2p/go-libp2p-quic-transport"
 	routing "github.com/libp2p/go-libp2p-routing"
 	libp2ptls "github.com/libp2p/go-libp2p-tls"
+	yamux "github.com/libp2p/go-libp2p-yamux"
 	"github.com/libp2p/go-tcp-transport"
 	websocket "github.com/libp2p/go-ws-transport"
 	"github.com/sparkymat/appdir"
@@ -155,17 +156,8 @@ func loadUserPrivKey() (priv crypto.PrivKey, err error) {
 func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, error) {
 	var d *dht.IpfsDHT
 
-	h, err := libp2p.New(ctx,
+	h, err := libp2p.NewWithoutDefaults(ctx,
 		libp2p.Identity(priv),
-
-		libp2p.Transport(libp2pquic.NewTransport),
-		libp2p.Transport(tcp.NewTCPTransport),
-		libp2p.Transport(websocket.New),
-
-		libp2p.DefaultMuxers,
-
-		libp2p.Security(noise.ID, noise.New),
-		libp2p.Security(libp2ptls.ID, libp2ptls.New),
 
 		libp2p.ListenAddrStrings(
 			"/ip4/0.0.0.0/udp/0/quic",
@@ -174,6 +166,15 @@ func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, erro
 			"/ip4/0.0.0.0/tcp/0",
 			"/ip6/::/tcp/0",
 		),
+
+		libp2p.Transport(libp2pquic.NewTransport),
+		libp2p.Transport(tcp.NewTCPTransport),
+		libp2p.Transport(websocket.New),
+
+		libp2p.Security(noise.ID, noise.New),
+		libp2p.Security(libp2ptls.ID, libp2ptls.New),
+
+		libp2p.Muxer("/yamux/1.0.0", yamux.DefaultTransport),
 
 		libp2p.ConnectionManager(connmgr.NewConnManager(
 			100,         // Lowwater
