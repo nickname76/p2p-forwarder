@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-	"time"
 	"unicode"
 
 	p2pforwarder "github.com/nickname32/p2p-forwarder"
@@ -23,14 +22,12 @@ func init() {
 		Development: false,
 		Encoding:    "console",
 		EncoderConfig: zapcore.EncoderConfig{
-			TimeKey:     "Time",
-			LevelKey:    "Level",
-			MessageKey:  "Message",
-			LineEnding:  zapcore.DefaultLineEnding,
-			EncodeLevel: zapcore.LowercaseLevelEncoder,
-			EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-				enc.AppendString(t.Format("2006/01/02 15:04:05.000"))
-			},
+			TimeKey:        "Time",
+			LevelKey:       "Level",
+			MessageKey:     "Message",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.LowercaseLevelEncoder,
+			EncodeTime:     zapcore.TimeEncoderOfLayout("2006/01/02 15:04:05.000"),
 			EncodeDuration: nil,
 			EncodeCaller:   nil,
 		},
@@ -44,7 +41,7 @@ func init() {
 	zap.ReplaceGlobals(logger)
 
 	p2pforwarder.OnError(func(err error) {
-		zap.S().Error(err)
+		zap.L().Error(err.Error())
 	})
 	p2pforwarder.OnInfo(func(str string) {
 		zap.L().Info(str)
