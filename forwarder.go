@@ -165,6 +165,9 @@ func createLibp2pHost(ctx context.Context, priv crypto.PrivKey) (host.Host, erro
 
 			"/ip4/0.0.0.0/tcp/0",
 			"/ip6/::/tcp/0",
+
+			"/ip4/0.0.0.0/tcp/0/ws",
+			"/ip6/::/tcp/0/ws",
 		),
 
 		libp2p.Transport(libp2pquic.NewTransport),
