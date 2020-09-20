@@ -38,7 +38,6 @@ endef
 # build-and-zip-all-targets builds and zips binary for all targets
 #   1 - "cli" or "tui"
 define build-and-zip-all-targets
-	$(call build-and-zip,$(1),darwin,386)
 	$(call build-and-zip,$(1),darwin,amd64)
 
 	$(call build-and-zip,$(1),linux,386)
