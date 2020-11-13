@@ -1,6 +1,6 @@
 module github.com/nickname32/p2p-forwarder
 
-go 1.14
+go 1.15
 
 require (
 	github.com/VladimirMarkelov/clui v1.2.1
@@ -15,12 +15,12 @@ require (
 	github.com/libp2p/go-libp2p-quic-transport v0.9.0
 	github.com/libp2p/go-libp2p-routing v0.1.0
 	github.com/libp2p/go-libp2p-tls v0.1.3
-	github.com/libp2p/go-libp2p-yamux v0.4.0
+	github.com/libp2p/go-libp2p-yamux v0.4.1
 	github.com/libp2p/go-tcp-transport v0.2.1
 	github.com/libp2p/go-ws-transport v0.3.1
 	github.com/mattn/go-runewidth v0.0.9 // indirect
-	github.com/nsf/termbox-go v0.0.0-20200418040025-38ba6e5628f1 // indirect
-	github.com/pion/udp v0.1.1-0.20200825013337-74ffc0e2471f
+	github.com/nsf/termbox-go v0.0.0-20201107200903-9b52a5faed9e // indirect
+	github.com/pion/udp v0.1.1-0.20201107040230-f6f2e903722e
 	github.com/sparkymat/appdir v0.0.0-20190803090504-1c2ab64aee87
 	go.uber.org/zap v1.16.0
 )
