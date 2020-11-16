@@ -12,7 +12,7 @@ require (
 	github.com/libp2p/go-libp2p-core v0.7.0
 	github.com/libp2p/go-libp2p-kad-dht v0.11.0
 	github.com/libp2p/go-libp2p-noise v0.1.2
-	github.com/libp2p/go-libp2p-quic-transport v0.9.0
+	github.com/libp2p/go-libp2p-quic-transport v0.9.1
 	github.com/libp2p/go-libp2p-routing v0.1.0
 	github.com/libp2p/go-libp2p-tls v0.1.3
 	github.com/libp2p/go-libp2p-yamux v0.4.1
