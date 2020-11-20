@@ -31,8 +31,8 @@ endef
 #   2 - GOOS
 #   3 - GOARCH
 define build-and-zip
-	$(call build,$(1),$(2),$(3),$(BUILDS_DIRECTORY)/$(BINARY_NAME)-$(1))
-	cd $(BUILDS_DIRECTORY); zip "./$(BINARY_NAME)-$(1)_$(2)_$(3).zip" "./$(BINARY_NAME)-$(1)"
+	$(call build,$(1),$(2),$(3),$(BUILDS_DIRECTORY)/$(BINARY_NAME)_$(1))
+	cd $(BUILDS_DIRECTORY); zip "./$(BINARY_NAME)_$(1)_$(2)_$(3).zip" "./$(BINARY_NAME)_$(1)"
 endef
 
 # build-and-zip-all-targets builds and zips binary for all targets
@@ -45,14 +45,14 @@ define build-and-zip-all-targets
 	$(call build-and-zip,$(1),linux,arm)
 	$(call build-and-zip,$(1),linux,arm64)
 
-	-rm $(BUILDS_DIRECTORY)/$(BINARY_NAME)-$(1)
+	-rm $(BUILDS_DIRECTORY)/$(BINARY_NAME)_$(1)
 
-	$(call build,$(1),windows,386,$(BUILDS_DIRECTORY)/$(BINARY_NAME)-$(1).exe)
-	cd $(BUILDS_DIRECTORY); zip "./$(BINARY_NAME)-$(1)_windows_386.zip" "./$(BINARY_NAME)-$(1).exe"
-	$(call build,$(1),windows,amd64,$(BUILDS_DIRECTORY)/$(BINARY_NAME)-$(1).exe)
-	cd $(BUILDS_DIRECTORY); zip "./$(BINARY_NAME)-$(1)_windows_amd64.zip" "./$(BINARY_NAME)-$(1).exe"
+	$(call build,$(1),windows,386,$(BUILDS_DIRECTORY)/$(BINARY_NAME)_$(1).exe)
+	cd $(BUILDS_DIRECTORY); zip "./$(BINARY_NAME)_$(1)_windows_386.zip" "./$(BINARY_NAME)_$(1).exe"
+	$(call build,$(1),windows,amd64,$(BUILDS_DIRECTORY)/$(BINARY_NAME)_$(1).exe)
+	cd $(BUILDS_DIRECTORY); zip "./$(BINARY_NAME)_$(1)_windows_amd64.zip" "./$(BINARY_NAME)_$(1).exe"
 
-	-rm $(BUILDS_DIRECTORY)/$(BINARY_NAME)-$(1).exe
+	-rm $(BUILDS_DIRECTORY)/$(BINARY_NAME)_$(1).exe
 endef
 
 all:
