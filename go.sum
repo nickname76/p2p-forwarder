@@ -543,8 +543,8 @@ github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/9
 github.com/pion/logging v0.2.2/go.mod h1:k0/tDVsRCX2Mb2ZEmTqNa7CWsQPc+YYCB7Q+5pahoms=
 github.com/pion/transport v0.10.1 h1:2W+yJT+0mOQ160ThZYUx5Zp2skzshiNgxrNE9GUfhJM=
 github.com/pion/transport v0.10.1/go.mod h1:PBis1stIILMiis0PewDw91WJeLJkyIMcEk+DwKOzf4A=
-github.com/pion/udp v0.1.1-0.20201107040230-f6f2e903722e h1:odctlZ28zKeQEEyV3KQym6jEXsiW2/HlZ3Ftsi9IIW8=
-github.com/pion/udp v0.1.1-0.20201107040230-f6f2e903722e/go.mod h1:loXVk8mJ+kCIXk0FSRDpvrACJyvlorQ8hXh/oA+kbbE=
+github.com/pion/udp v0.1.1-0.20201116193239-c2b85bb40dd1 h1:9ldg9CQtAAUHVg/H1sCQRfAjUjf2/yIMtT1IXae8/kU=
+github.com/pion/udp v0.1.1-0.20201116193239-c2b85bb40dd1/go.mod h1:loXVk8mJ+kCIXk0FSRDpvrACJyvlorQ8hXh/oA+kbbE=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

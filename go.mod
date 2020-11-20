@@ -20,7 +20,7 @@ require (
 	github.com/libp2p/go-ws-transport v0.3.1
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/nsf/termbox-go v0.0.0-20201107200903-9b52a5faed9e // indirect
-	github.com/pion/udp v0.1.1-0.20201107040230-f6f2e903722e
+	github.com/pion/udp v0.1.1-0.20201116193239-c2b85bb40dd1
 	github.com/sparkymat/appdir v0.0.0-20190803090504-1c2ab64aee87
 	go.uber.org/zap v1.16.0
 )
