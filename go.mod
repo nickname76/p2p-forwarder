@@ -18,9 +18,8 @@ require (
 	github.com/libp2p/go-libp2p-yamux v0.5.1
 	github.com/libp2p/go-tcp-transport v0.2.1
 	github.com/libp2p/go-ws-transport v0.4.0
-	github.com/mattn/go-runewidth v0.0.9 // indirect
-	github.com/nsf/termbox-go v0.0.0-20201107200903-9b52a5faed9e // indirect
-	github.com/pion/udp v0.1.1-0.20201116193239-c2b85bb40dd1
+	github.com/nsf/termbox-go v0.0.0-20201124104050-ed494de23a00 // indirect
+	github.com/pion/udp v0.1.1-0.20201216163422-c79b416a74b3
 	github.com/sparkymat/appdir v0.0.0-20190803090504-1c2ab64aee87
 	go.uber.org/zap v1.16.0
 )
