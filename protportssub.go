@@ -3,6 +3,7 @@ package p2pforwarder
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 
@@ -130,6 +131,9 @@ func (f *Forwarder) sendPortsManifestToSubscriber(peerid peer.ID, b []byte) {
 	f.portsSubscribersMux.Unlock()
 }
 
+// ErrConnReset = error Connection reset
+var ErrConnReset = errors.New("Connection reset")
+
 func (f *Forwarder) sendOpenPortsManifestBytes(peerid peer.ID, b []byte) error {
 	s, err := f.host.NewStream(context.Background(), peerid, portssubProtID)
 	if err != nil {
@@ -148,10 +152,15 @@ func (f *Forwarder) sendOpenPortsManifestBytes(peerid peer.ID, b []byte) error {
 	}
 
 	// Test, if connection have been reset or not
-	_, err = io.ReadFull(s, make([]byte, 1))
+	n, err := io.ReadFull(s, make([]byte, 1))
 	if err != nil {
 		s.Reset()
 		return fmt.Errorf("sendOpenPortsManifestBytes: %s", err)
+	}
+
+	if n == 0 {
+		s.Reset()
+		return fmt.Errorf("sendOpenPortsManifestBytes: %s", ErrConnReset)
 	}
 
 	s.Close()
