@@ -21,5 +21,5 @@ require (
 	github.com/nsf/termbox-go v0.0.0-20201124104050-ed494de23a00 // indirect
 	github.com/pion/udp v0.1.1-0.20201216163422-c79b416a74b3
 	github.com/sparkymat/appdir v0.0.0-20190803090504-1c2ab64aee87
-	go.uber.org/zap v1.16.0
+	go.uber.org/zap v1.18.1
 )
